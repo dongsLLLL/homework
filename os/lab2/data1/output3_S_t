@@ -1,0 +1,305 @@
+
+==> 1 0 ts=1 READY  dur=0
+T(0:1): READY -> READY
+   delay scheduler
+
+==> 1 1 ts=1 READY  dur=0
+T(1:1): READY -> READY
+   delay scheduler
+
+==> 1 2 ts=1 READY  dur=0
+T(2:1): READY -> READY
+
+==> 1 2 ts=1 RUNNG  dur=0
+T(2:1): READY -> RUNNG  cb=4 rem=30
+
+==> 5 2 ts=1 BLOCK  dur=4
+T(2:5): RUNNG -> BLOCK  ib=2 rem=26
+
+==> 5 0 ts=1 RUNNG  dur=4
+T(0:5): READY -> RUNNG  cb=18 rem=100
+
+==> 7 2 ts=5 READY  dur=2
+T(2:7): BLOCK -> READY
+
+==> 23 0 ts=5 BLOCK  dur=18
+T(0:23): RUNNG -> BLOCK  ib=16 rem=82
+
+==> 23 2 ts=7 RUNNG  dur=16
+T(2:23): READY -> RUNNG  cb=4 rem=26
+
+==> 27 2 ts=23 BLOCK  dur=4
+T(2:27): RUNNG -> BLOCK  ib=1 rem=22
+
+==> 27 1 ts=1 RUNNG  dur=26
+T(1:27): READY -> RUNNG  cb=17 rem=100
+
+==> 28 2 ts=27 READY  dur=1
+T(2:28): BLOCK -> READY
+
+==> 39 0 ts=23 READY  dur=16
+T(0:39): BLOCK -> READY
+
+==> 44 1 ts=27 BLOCK  dur=17
+T(1:44): RUNNG -> BLOCK  ib=3 rem=83
+
+==> 44 2 ts=28 RUNNG  dur=16
+T(2:44): READY -> RUNNG  cb=10 rem=22
+
+==> 47 1 ts=44 READY  dur=3
+T(1:47): BLOCK -> READY
+
+==> 54 2 ts=44 BLOCK  dur=10
+T(2:54): RUNNG -> BLOCK  ib=2 rem=12
+
+==> 54 0 ts=39 RUNNG  dur=15
+T(0:54): READY -> RUNNG  cb=3 rem=82
+
+==> 56 2 ts=54 READY  dur=2
+T(2:56): BLOCK -> READY
+
+==> 57 0 ts=54 BLOCK  dur=3
+T(0:57): RUNNG -> BLOCK  ib=8 rem=79
+
+==> 57 2 ts=56 RUNNG  dur=1
+T(2:57): READY -> RUNNG  cb=1 rem=12
+
+==> 58 2 ts=57 BLOCK  dur=1
+T(2:58): RUNNG -> BLOCK  ib=5 rem=11
+
+==> 58 1 ts=47 RUNNG  dur=11
+T(1:58): READY -> RUNNG  cb=24 rem=83
+
+==> 63 2 ts=58 READY  dur=5
+T(2:63): BLOCK -> READY
+
+==> 65 0 ts=57 READY  dur=8
+T(0:65): BLOCK -> READY
+
+==> 82 1 ts=58 BLOCK  dur=24
+T(1:82): RUNNG -> BLOCK  ib=7 rem=59
+
+==> 82 2 ts=63 RUNNG  dur=19
+T(2:82): READY -> RUNNG  cb=1 rem=11
+
+==> 83 2 ts=82 BLOCK  dur=1
+T(2:83): RUNNG -> BLOCK  ib=2 rem=10
+
+==> 83 0 ts=65 RUNNG  dur=18
+T(0:83): READY -> RUNNG  cb=13 rem=79
+
+==> 85 2 ts=83 READY  dur=2
+T(2:85): BLOCK -> READY
+
+==> 89 1 ts=82 READY  dur=7
+T(1:89): BLOCK -> READY
+
+==> 96 0 ts=83 BLOCK  dur=13
+T(0:96): RUNNG -> BLOCK  ib=17 rem=66
+
+==> 96 2 ts=85 RUNNG  dur=11
+T(2:96): READY -> RUNNG  cb=2 rem=10
+
+==> 98 2 ts=96 BLOCK  dur=2
+T(2:98): RUNNG -> BLOCK  ib=4 rem=8
+
+==> 98 1 ts=89 RUNNG  dur=9
+T(1:98): READY -> RUNNG  cb=28 rem=59
+
+==> 102 2 ts=98 READY  dur=4
+T(2:102): BLOCK -> READY
+
+==> 113 0 ts=96 READY  dur=17
+T(0:113): BLOCK -> READY
+
+==> 126 1 ts=98 BLOCK  dur=28
+T(1:126): RUNNG -> BLOCK  ib=10 rem=31
+
+==> 126 2 ts=102 RUNNG  dur=24
+T(2:126): READY -> RUNNG  cb=3 rem=8
+
+==> 129 2 ts=126 BLOCK  dur=3
+T(2:129): RUNNG -> BLOCK  ib=1 rem=5
+
+==> 129 0 ts=113 RUNNG  dur=16
+T(0:129): READY -> RUNNG  cb=3 rem=66
+
+==> 130 2 ts=129 READY  dur=1
+T(2:130): BLOCK -> READY
+
+==> 132 0 ts=129 BLOCK  dur=3
+T(0:132): RUNNG -> BLOCK  ib=4 rem=63
+
+==> 132 2 ts=130 RUNNG  dur=2
+T(2:132): READY -> RUNNG  cb=5 rem=5
+
+==> 136 1 ts=126 READY  dur=10
+T(1:136): BLOCK -> READY
+
+==> 136 0 ts=132 READY  dur=4
+T(0:136): BLOCK -> READY
+
+==> 137 2 ts=132 BLOCK  dur=5
+==> T(2): Done
+
+==> 137 1 ts=136 RUNNG  dur=1
+T(1:137): READY -> RUNNG  cb=26 rem=31
+
+==> 163 1 ts=137 BLOCK  dur=26
+T(1:163): RUNNG -> BLOCK  ib=10 rem=5
+
+==> 163 0 ts=136 RUNNG  dur=27
+T(0:163): READY -> RUNNG  cb=3 rem=63
+
+==> 166 0 ts=163 BLOCK  dur=3
+T(0:166): RUNNG -> BLOCK  ib=3 rem=60
+
+==> 169 0 ts=166 READY  dur=3
+T(0:169): BLOCK -> READY
+
+==> 169 0 ts=169 RUNNG  dur=0
+T(0:169): READY -> RUNNG  cb=19 rem=60
+
+==> 173 1 ts=163 READY  dur=10
+T(1:173): BLOCK -> READY
+
+==> 188 0 ts=169 BLOCK  dur=19
+T(0:188): RUNNG -> BLOCK  ib=10 rem=41
+
+==> 188 1 ts=173 RUNNG  dur=15
+T(1:188): READY -> RUNNG  cb=5 rem=5
+
+==> 193 1 ts=188 BLOCK  dur=5
+==> T(1): Done
+
+==> 198 0 ts=188 READY  dur=10
+T(0:198): BLOCK -> READY
+
+==> 198 0 ts=198 RUNNG  dur=0
+T(0:198): READY -> RUNNG  cb=14 rem=41
+
+==> 212 0 ts=198 BLOCK  dur=14
+T(0:212): RUNNG -> BLOCK  ib=17 rem=27
+
+==> 229 0 ts=212 READY  dur=17
+T(0:229): BLOCK -> READY
+
+==> 229 0 ts=229 RUNNG  dur=0
+T(0:229): READY -> RUNNG  cb=12 rem=27
+
+==> 241 0 ts=229 BLOCK  dur=12
+T(0:241): RUNNG -> BLOCK  ib=3 rem=15
+
+==> 244 0 ts=241 READY  dur=3
+T(0:244): BLOCK -> READY
+
+==> 244 0 ts=244 RUNNG  dur=0
+T(0:244): READY -> RUNNG  cb=10 rem=15
+
+==> 254 0 ts=244 BLOCK  dur=10
+T(0:254): RUNNG -> BLOCK  ib=14 rem=5
+
+==> 268 0 ts=254 READY  dur=14
+T(0:268): BLOCK -> READY
+
+==> 268 0 ts=268 RUNNG  dur=0
+T(0:268): READY -> RUNNG  cb=2 rem=5
+
+==> 270 0 ts=268 BLOCK  dur=2
+T(0:270): RUNNG -> BLOCK  ib=20 rem=3
+
+==> 290 0 ts=270 READY  dur=20
+T(0:290): BLOCK -> READY
+
+==> 290 0 ts=290 RUNNG  dur=0
+T(0:290): READY -> RUNNG  cb=3 rem=3
+
+==> 293 0 ts=290 BLOCK  dur=3
+==> T(0): Done
+
+==> 1000 3 ts=1000 READY  dur=0
+T(3:1000): READY -> READY
+
+==> 1000 3 ts=1000 RUNNG  dur=0
+T(3:1000): READY -> RUNNG  cb=8 rem=30
+
+==> 1008 3 ts=1000 BLOCK  dur=8
+T(3:1008): RUNNG -> BLOCK  ib=4 rem=22
+
+==> 1012 3 ts=1008 READY  dur=4
+T(3:1012): BLOCK -> READY
+
+==> 1012 3 ts=1012 RUNNG  dur=0
+T(3:1012): READY -> RUNNG  cb=5 rem=22
+
+==> 1017 3 ts=1012 BLOCK  dur=5
+T(3:1017): RUNNG -> BLOCK  ib=1 rem=17
+
+==> 1018 3 ts=1017 READY  dur=1
+T(3:1018): BLOCK -> READY
+
+==> 1018 3 ts=1018 RUNNG  dur=0
+T(3:1018): READY -> RUNNG  cb=1 rem=17
+
+==> 1019 3 ts=1018 BLOCK  dur=1
+T(3:1019): RUNNG -> BLOCK  ib=4 rem=16
+
+==> 1023 3 ts=1019 READY  dur=4
+T(3:1023): BLOCK -> READY
+
+==> 1023 3 ts=1023 RUNNG  dur=0
+T(3:1023): READY -> RUNNG  cb=7 rem=16
+
+==> 1030 3 ts=1023 BLOCK  dur=7
+T(3:1030): RUNNG -> BLOCK  ib=2 rem=9
+
+==> 1032 3 ts=1030 READY  dur=2
+T(3:1032): BLOCK -> READY
+
+==> 1032 3 ts=1032 RUNNG  dur=0
+T(3:1032): READY -> RUNNG  cb=1 rem=9
+
+==> 1033 3 ts=1032 BLOCK  dur=1
+T(3:1033): RUNNG -> BLOCK  ib=2 rem=8
+
+==> 1035 3 ts=1033 READY  dur=2
+T(3:1035): BLOCK -> READY
+
+==> 1035 3 ts=1035 RUNNG  dur=0
+T(3:1035): READY -> RUNNG  cb=4 rem=8
+
+==> 1039 3 ts=1035 BLOCK  dur=4
+T(3:1039): RUNNG -> BLOCK  ib=3 rem=4
+
+==> 1042 3 ts=1039 READY  dur=3
+T(3:1042): BLOCK -> READY
+
+==> 1042 3 ts=1042 RUNNG  dur=0
+T(3:1042): READY -> RUNNG  cb=1 rem=4
+
+==> 1043 3 ts=1042 BLOCK  dur=1
+T(3:1043): RUNNG -> BLOCK  ib=2 rem=3
+
+==> 1045 3 ts=1043 READY  dur=2
+T(3:1045): BLOCK -> READY
+
+==> 1045 3 ts=1045 RUNNG  dur=0
+T(3:1045): READY -> RUNNG  cb=2 rem=3
+
+==> 1047 3 ts=1045 BLOCK  dur=2
+T(3:1047): RUNNG -> BLOCK  ib=1 rem=1
+
+==> 1048 3 ts=1047 READY  dur=1
+T(3:1048): BLOCK -> READY
+
+==> 1048 3 ts=1048 RUNNG  dur=0
+T(3:1048): READY -> RUNNG  cb=1 rem=1
+
+==> 1049 3 ts=1048 BLOCK  dur=1
+==> T(3): Done
+SJF
+0000:    1  100   20   20 |  293  292  112   80
+0001:    1  100   30   10 |  193  192   30   62
+0002:    1   30   10    5 |  137  136   17   89
+0003: 1000   30   10    5 | 1049   49   19    0
+SUM: 1049 24.79 15.06 167.25 57.75 0.381
