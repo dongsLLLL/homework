@@ -39,7 +39,11 @@ int process_termination_no=0;
 double cpu_time=0;
 double io_time=0;
 vector<int> randvals;
-int ofs;
+int ofs=0;
+//flag for running
+//  0 : there is no running process right now
+//  1 : there is running process right now
+int RUNNING=0; 
 
 struct process{
     int id;
@@ -59,123 +63,140 @@ struct process{
     int it; //time in blocked state
     int cw; //time in ready state
 };
-process running,running_finished;
+
+process running, running_prepare;
 list<process> ready_queue;
 list<process> block_queue;
-list<process> block_ready_queue;
 vector<process> all_processes;
 
 //the random time of running cpu or block
-int cpu_run_or_block_time(int burst)
-{
+int cpu_run_or_block_time(int burst){
   return 1 + (randvals[ofs++] % burst); 
 }
 
-//a provess is finished and print it out
-void process_termination_or_block (){
-    if (running_finished.finish_time!=0)
-    {
-        if (running_finished.finish_time<=timestamp) {
-            if (running_finished.tc_remain ==0) {
-                running_finished.ft=running_finished.finish_time;
-                running_finished.tt=running_finished.ft-running_finished.at;
-                printf("%04d: %4d %4d %4d %4d | %4d %4d %4d %4d\n",process_termination_no,running_finished.at,running_finished.tc,running_finished.cb,running_finished.io,running_finished.ft,running_finished.tt,running_finished.it,running_finished.cw);
-                /*cout<<process_termination_no<<":    "<<running_finished.at<<"    "<<running_finished.tc<<"    "<<running_finished.cb<<"    "<<running_finished.io<<" |  "<<running_finished.ft<<"    "<<running_finished.tt<<"    "<<running_finished.it<<"    "<<running_finished.cw<<endl;*/
-                process_termination_no++;
-            }
-            else {
-                int burst = cpu_run_or_block_time(running_finished.io);
-                running_finished.it += burst;
-                running_finished.finish_time = timestamp + burst;
-                running_finished.generate_time=timestamp;
-                block_queue.push_back(running_finished);
-            }
-        }
-    }
+void finish_process(){
+  running.ft=running.finish_time;
+  running.tt=running.ft-running.at;
+  process_termination_no++;
+
+  //set finished processes
+  all_processes[running.id] = running;
+  RUNNING=0;
 }
 
-//cpu run the current process
-void cpu_run () {
-    int burst = cpu_run_or_block_time(running.cb);
-    if (running.tc_remain<burst) burst=running.tc_remain;
-    cpu_time +=burst;
-    running.tc_remain -= burst;
-    running.finish_time = timestamp + burst;
+//block running process for IO burst
+void block_process(){
+  int burst = cpu_run_or_block_time(running.io);
+//  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  running.it += burst;
+  running.finish_time = timestamp + burst;
+  running.generate_time=timestamp;
+  block_queue.push_back(running);
+  RUNNING=0;
+}
+
+//check running process if it has been finished or got blocked
+void stop_process (){
+  if (RUNNING==1) {
+    //current event finished
+    if (running.finish_time<=timestamp) {
+      if (running.tc_remain ==0) {
+        finish_process();
+      } else {
+        block_process();
+      }
+    }
+  }
 }
 
 //grab process from the ready queue
-void ready_to_run (){
-    process p;
-    if (!ready_queue.empty()) {
-        p=ready_queue.front();
-        ready_queue.pop_front();
-        if (p.at_new < timestamp) {
-            cout << p.at_new << "*****" << timestamp << endl;
-            p.cw += (timestamp-p.at_new);
-        }
-        p.generate_time=timestamp;
-        running =p;
-        cpu_run();
-    }
+process prepare_running_process (){
+  process p;
+
+  p=ready_queue.front();
+  ready_queue.pop_front();
+  //set the cpu burst
+  int burst = cpu_run_or_block_time(p.cb);
+  if (p.tc_remain<burst) burst=p.tc_remain;
+  cpu_time +=burst;
+
+//  cout << "CPU burst------Running:  " << p.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+
+  //set running process
+  p.generate_time=timestamp;
+  if (p.at_new < timestamp) {
+    p.cw += (timestamp-p.at_new);
+  }
+  p.tc_remain -= burst;
+  p.finish_time = timestamp + burst;
+
+  return p;
+}
+
+//run a process 
+void run_process (process p) {
+  running = p;
+  //set running flag
+  RUNNING=1;
 }
 
 //solve block finished process and running process
-void solve_block_and_running_finished (){
-    if (running.finish_time!=0&&running.finish_time<=timestamp) {
-        running_finished=running;
-        running.finish_time =0;
-        if (!block_ready_queue.empty()) {
-          list<process>::iterator it=block_ready_queue.begin();
-          while (it != block_ready_queue.end()){
-            if ((*it).generate_time<running_finished.generate_time) {
-              ready_queue.push_back(*(it++));
-              block_ready_queue.pop_front();
-              if (running.finish_time ==0) {
-                  ready_to_run();
-              }
-            }
-            else{
-              process_termination_or_block();
-              it++;
-            }
-          }
-        }
-        else process_termination_or_block();
-    }
-    else if (running.finish_time>timestamp){
-      if (!block_ready_queue.empty()) {
-        list<process>::iterator it=block_ready_queue.begin();
-        while (it != block_ready_queue.end()){
-            ready_queue.push_back(*(it++));
-            block_ready_queue.pop_front();
-        }
+void check_ready_queue_and_running (){
+  //there is a running process
+  if (RUNNING==1){
+    //checking if current cpu burst has been finished
+    if (running.finish_time == timestamp){
+      //switch process
+      if (!ready_queue.empty()){
+        list<process>::iterator it = ready_queue.begin();
+
+        //decide which process to start
+        //if ((*it).generate_time < running.generate_time){
+        //  running_prepare=prepare_running_process();
+        //  stop_process ();
+        //}else{
+        //  stop_process ();
+        //  running_prepare=prepare_running_process();
+        //}
+
+        stop_process ();
+        running_prepare=prepare_running_process();
+        run_process(running_prepare);
+      }else{
+        stop_process ();
       }
-    } 
-    else{
-      if (!block_ready_queue.empty()) {
-        list<process>::iterator it=block_ready_queue.begin();
-        while (it != block_ready_queue.end()){
-            ready_queue.push_back(*(it++));
-            block_ready_queue.pop_front();
-        }
-      }
-      ready_to_run();
     }
+  }
+  //there is no running process
+  else{
+    //pick up a new process
+    if (!ready_queue.empty()){
+      running_prepare=prepare_running_process();
+      run_process(running_prepare);
+    }
+  }
 }
 
 //check if there is any process in block list has done its io bound
-void check_block_list (){
-    if (!block_queue.empty()) {
-        list<process>::iterator it=block_queue.begin();
-        while (it != block_queue.end()){
-          if ((*it).finish_time <= timestamp){
-            (*it).at_new=timestamp;
-            list<process>::iterator it2=block_ready_queue.end();
-            block_ready_queue.splice(it2, block_queue, it); 
-            it++;
-          }
-        }
+void check_block_queue (){
+  if (!block_queue.empty()) {
+    list<process>::iterator it = block_queue.begin();
+    int index=0;
+    while (it != block_queue.end()){
+      if ((*it).finish_time <= timestamp){
+        (*it).at_new=timestamp;
+        (*it).generate_time=timestamp;
+        ready_queue.push_back(*it);
+        block_queue.erase(it);
+
+        it = block_queue.begin();
+        advance(it,index);
+        index--;
+      }
+      it++;
+      index++;
     }
+  }
 }
 
 //main function
@@ -184,6 +205,13 @@ int main(int argc, char** argv) {
         cout << "Wrong Number of arguments, exiting ..." << endl;
         exit(0);
     }
+
+    //initiate running 
+    running.finish_time=0;
+    running.ft=0;
+    running.tt=0;
+    running.it=0;
+    running.cw=0;
     
     //read the input file
     string file_name=argv[1];
@@ -194,7 +222,7 @@ int main(int argc, char** argv) {
         exit(0);
     }
     int at,tc,cb,io;
-    int process_id=1;
+    int process_id=0;
     string line;
     while (!infile.eof()) {
       getline(infile, line);
@@ -233,7 +261,7 @@ int main(int argc, char** argv) {
       randvals.push_back(random);
     }
     
-    cout<<"FCFS"<<endl;
+    cout << "FCFS" << endl;
     int index = 0;
     while (true) {
         //begin reading the input file
@@ -242,21 +270,32 @@ int main(int argc, char** argv) {
           if (p.at == timestamp){
             ready_queue.push_back(p);
             index++; 
+          }else{
+            break;
           }
-          break;
         }
 
         //begin
-        check_block_list();
-        solve_block_and_running_finished();
+        check_block_queue();
+        check_ready_queue_and_running();
+
         if (!block_queue.empty()) {
           io_time++;
         }
+
+        //cout << "TimeStamp: " << timestamp << endl;
+
         timestamp++;
-        if (block_queue.empty()&&ready_queue.empty()&&infile.eof()&&running.finish_time==0&&index==all_processes.size()) {
-            printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",running_finished.ft,(double)cpu_time/running_finished.ft*100,(double)io_time/running_finished.ft*100,0.00,0.00,0.000);
-            break;
+        if (process_termination_no==all_processes.size()) {
+
+          //print the result
+          for (vector<process>::iterator it=all_processes.begin();it!=all_processes.end();it++){
+            printf("%04d: %4d %4d %4d %4d | %4d %4d %4d %4d\n",(*it).id,(*it).at,(*it).tc,(*it).cb,(*it).io,(*it).ft,(*it).tt,(*it).it,(*it).cw);
+          }
+
+          //print the summary
+          printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",running.ft,(double)cpu_time/running.ft*100,(double)io_time/running.ft*100,0.00,0.00,0.000);
+          break;
         }
     }
 }
-
