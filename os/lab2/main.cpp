@@ -144,12 +144,12 @@ void run_process (process p) {
 void check_ready_queue_and_running (){
   //there is a running process
   if (RUNNING==1){
-    //checking if current cpu burst has been finished
+    //current cpu burst of running process has been finished
     if (running.finish_time == timestamp){
-      //switch process
+      //stop running process and pick up a new running process
       if (!ready_queue.empty()){
-        list<process>::iterator it = ready_queue.begin();
 
+        //list<process>::iterator it = ready_queue.begin();
         //decide which process to start
         //if ((*it).generate_time < running.generate_time){
         //  running_prepare=prepare_running_process();
@@ -159,10 +159,14 @@ void check_ready_queue_and_running (){
         //  running_prepare=prepare_running_process();
         //}
 
+        //stop running process
         stop_process ();
+        //pick up a nw process
         running_prepare=prepare_running_process();
         run_process(running_prepare);
-      }else{
+      }
+      //no process to run currently, just stop running process
+      else{
         stop_process ();
       }
     }
@@ -181,20 +185,18 @@ void check_ready_queue_and_running (){
 void check_block_queue (){
   if (!block_queue.empty()) {
     list<process>::iterator it = block_queue.begin();
-    int index=0;
+    list<process>::iterator temp;
     while (it != block_queue.end()){
       if ((*it).finish_time <= timestamp){
+        temp=it;
+        block_queue.erase(temp);
+
         (*it).at_new=timestamp;
         (*it).generate_time=timestamp;
-        ready_queue.push_back(*it);
-        block_queue.erase(it);
-
-        it = block_queue.begin();
-        advance(it,index);
-        index--;
+        ready_queue.push_back(*(it++));
+      }else{
+        it++;
       }
-      it++;
-      index++;
     }
   }
 }
