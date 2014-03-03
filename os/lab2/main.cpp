@@ -242,6 +242,43 @@ int main(int argc, char** argv) {
       exit(0);
   }
 
+  cout << "TYPES:" << endl;
+  cout << "1. FCFS" << endl;
+  cout << "2. LCFS" << endl;
+  cout << "3. STJ"  << endl;
+  cout << "4. ROBIN"<< endl;
+  cout << "Please enter the number to choose a type :";
+
+  cin >> TYPE;
+  cout << endl;
+  if (TYPE==FCFS){
+    cout << "FCFS choosed." << endl;
+  }else if (TYPE==LCFS){
+    cout << "LCFS choosed." << endl;
+  }else if (TYPE==STJ){
+    cout << "STJ choosed." << endl;
+  }else if (TYPE==ROBIN){
+    cout << "ROBIN_ROUND choosed." << endl;
+  }else{
+    cout << "Invalid Choice, Exiting ..." << endl;
+  }
+
+  if (TYPE==ROBIN){
+    char choose;
+    cout << endl;
+    cout << "Do you want to set  your quantum ? DEFAULT:10 Y/N :" << endl;
+    cin >> choose;
+    if (choose == 'Y'){
+      cout << "Please enter the quantum:" << endl;
+      cin >> quantum;
+      cout << endl;
+    }else if (choose == 'N'){
+      cout << "Please enter the quantum:" << endl;
+      quantum=10;
+    }
+  }
+  cout << endl;
+
   //initiate running 
   running.finish_time=0;
   running.ft=0;
@@ -250,7 +287,7 @@ int main(int argc, char** argv) {
   running.cw=0;
   
   //read the input file
-  string file_name=argv[1];
+  string file_name=argv[2];
   ifstream infile;
   infile.open (file_name.c_str());
   if (!infile.is_open()){
