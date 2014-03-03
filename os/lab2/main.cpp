@@ -87,7 +87,7 @@ void finish_process(){
 //block running process for IO burst
 void block_process(){
   int burst = cpu_run_or_block_time(running.io);
-//  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
   running.it += burst;
   running.finish_time = timestamp + burst;
   running.generate_time=timestamp;
@@ -113,14 +113,34 @@ void stop_process (){
 process prepare_running_process (){
   process p;
 
-  p=ready_queue.front();
-  ready_queue.pop_front();
+  //****************** Smallest *****************************
+  //get the process with smallest tc_remain
+  //list<process>::iterator next_running_process=ready_queue.begin();
+  //for (list<process>::iterator it=ready_queue.begin(); it!= ready_queue.end(); ++it) {
+  //  if ((*it).tc_remain < (*next_running_process).tc_remain) {
+  //    next_running_process=it;
+  //  }
+  //}
+  //p=*next_running_process;
+  //ready_queue.erase(next_running_process);
+  //****************** Smallest *****************************
+
+  //****************** FCFS *****************************
+  //p=ready_queue.front();
+  //ready_queue.pop_front();
+  //****************** FCFS *****************************
+
+  //****************** LCFS *****************************
+  p=ready_queue.back();
+  ready_queue.pop_back();
+  //****************** LCFS *****************************
+  
   //set the cpu burst
   int burst = cpu_run_or_block_time(p.cb);
   if (p.tc_remain<burst) burst=p.tc_remain;
   cpu_time +=burst;
 
-//  cout << "CPU burst------Running:  " << p.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  cout << "CPU burst------Running:  " << p.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
 
   //set running process
   p.generate_time=timestamp;
@@ -142,37 +162,21 @@ void run_process (process p) {
 
 //solve block finished process and running process
 void check_ready_queue_and_running (){
-  //there is a running process
-  if (RUNNING==1){
-    //current cpu burst of running process has been finished
-    if (running.finish_time == timestamp){
-      //stop running process and pick up a new running process
-      if (!ready_queue.empty()){
-
-        //list<process>::iterator it = ready_queue.begin();
-        //decide which process to start
-        //if ((*it).generate_time < running.generate_time){
-        //  running_prepare=prepare_running_process();
-        //  stop_process ();
-        //}else{
-        //  stop_process ();
-        //  running_prepare=prepare_running_process();
-        //}
-
-        //stop running process
-        stop_process ();
-        //pick up a nw process
-        running_prepare=prepare_running_process();
-        run_process(running_prepare);
-      }
-      //no process to run currently, just stop running process
-      else{
-        stop_process ();
-      }
+  //current cpu burst of running process has been finished
+  if (RUNNING==1 && running.finish_time == timestamp){
+    //stop running process and pick up a new running process
+    if (!ready_queue.empty()){
+      stop_process ();
+      running_prepare=prepare_running_process();
+      run_process(running_prepare);
+    }
+    //no process to run currently, just stop running process
+    else{
+      stop_process ();
     }
   }
   //there is no running process
-  else{
+  else if (RUNNING==0){
     //pick up a new process
     if (!ready_queue.empty()){
       running_prepare=prepare_running_process();
@@ -187,7 +191,8 @@ void check_block_queue (){
     list<process>::iterator it = block_queue.begin();
     list<process>::iterator temp;
     while (it != block_queue.end()){
-      if ((*it).finish_time <= timestamp){
+      //IO burst finished
+      if ((*it).finish_time == timestamp){
         temp=it;
         block_queue.erase(temp);
 
