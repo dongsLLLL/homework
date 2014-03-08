@@ -235,14 +235,14 @@ int main(int argc, char** argv) {
   running.it=0;
   running.cw=0;
   
-  string type = argv[3];
+  string type = argv[2];
   if (type == "FCFS"){
     TYPE=FCFS;
   }else if (type == "LCFS"){
     TYPE=LCFS;
   }else if (type == "STJ"){
     TYPE=STJ;
-  }else if (type = "ROBIN"){
+  }else if (type == "ROBIN"){
     TYPE=ROBIN;
   }else{
     cout << "Error Type Name, Please make sure correct type name typed" << endl;
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
   }
 
   //read the input file
-  string file_name=argv[2];
+  string file_name=argv[1];
   ifstream infile;
   infile.open (file_name.c_str());
   if (!infile.is_open()){
