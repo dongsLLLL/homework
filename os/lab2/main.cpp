@@ -25,26 +25,20 @@
 #include <queue>
 #include <list>
 
-//#include "Events.h"
-//#include "FCFS.h"
-//#include "LCFS.h"
-//#include "SJF.h"
-//#include "Scheduler.h"
-//#include "Processes.h"
-//#include "RoundRobin.h"
-
 using namespace std;
+
 int timestamp=0;
 int process_termination_no=0;
 double cpu_time=0;
 double io_time=0;
-vector<int> randvals;
 int ofs=0;
-//flag for running
-//  0 : there is no running process right now
-//  1 : there is running process right now
 int RUNNING=0; 
- 
+//solutions
+int FCFS=1;
+int LCFS=2;
+int STJ=3;
+int ROBIN=4;
+int TYPE=1;
 //quantum for robin round algotithm
 int quantum=-1;
 
@@ -65,11 +59,7 @@ struct process{
   int tt; //ft-at
   int it; //time in blocked state
   int cw; //time in ready state
-
-  //for robin
-  // 0 : current burst finished
-  // 1 : still in current cpu burst
-  int signal;
+  //for robin_round
   int burst_remain;
 };
 
@@ -77,13 +67,8 @@ process running, running_prepare;
 list<process> ready_queue;
 list<process> block_queue;
 vector<process> all_processes;
-
-//solutions
-int FCFS=1;
-int LCFS=2;
-int STJ=3;
-int ROBIN=4;
-int TYPE=-1;
+//store rand numbers
+vector<int> randvals;
 
 //the random time of running cpu or block
 int cpu_run_or_block_time(int burst){
@@ -97,22 +82,21 @@ void finish_process(){
 
   //set finished processes
   all_processes[running.id] = running;
-  RUNNING=0;
 }
 
 //block running process for IO burst
 void block_process(){
   int burst = cpu_run_or_block_time(running.io);
-  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  //cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
   running.it += burst;
   running.finish_time = timestamp + burst;
   running.generate_time=timestamp;
-  running.signal=0;
   block_queue.push_back(running);
-  RUNNING=0;
 }
 
 void robin_round_finished(){
+  running.at_new = timestamp;
+  running.generate_time = timestamp;
   ready_queue.push_back(running);
 }
 
@@ -121,20 +105,24 @@ void stop_process (){
   if (RUNNING==1) {
     //current event finished
     if (running.finish_time<=timestamp) {
-      if (running.tc_remain ==0) {
+      if (running.tc_remain == 0) {
         finish_process();
       } else {
-        block_process();
+        if (TYPE == ROBIN && running.burst_remain !=0 ){
+          robin_round_finished();
+        }else{
+          block_process();
+        }
       }
+      //set RUNNING tag
+      RUNNING=0;
     }
   }
 }
 
-//grab process from the ready queue
-void pick_up_running_process (){
-  //********************* STJ *****************************
+void set_running_process(){
   if (TYPE==STJ){
-    get the process with smallest tc_remain
+    //get the process with smallest tc_remain
     list<process>::iterator next_running_process=ready_queue.begin();
     for (list<process>::iterator it=ready_queue.begin(); it!= ready_queue.end(); ++it) {
       if ((*it).tc_remain < (*next_running_process).tc_remain) {
@@ -145,48 +133,49 @@ void pick_up_running_process (){
     ready_queue.erase(next_running_process);
   }
 
-  //****************** FCFS or Robin Round ***************
   if (TYPE==FCFS || TYPE==ROBIN){
     running=ready_queue.front();
     ready_queue.pop_front();
   }
 
-  //****************** LCFS *****************************
   if (TYPE==LCFS){
     running=ready_queue.back();
     ready_queue.pop_back();
   }
+}
 
-  //set the cpu burst
+void pick_up_running_process (){
+  set_running_process();
+
   int burst;
-  //to skip robin round 
-  if (running.signal==0){
+  if (running.burst_remain==0){
     burst = cpu_run_or_block_time(running.cb);
     if (running.tc_remain<burst) burst=running.tc_remain;
-    burst_remain = burst;
-    running.signal=1;
-  }
 
-  if (TYPE==ROBIN)
-    if (burst_remain>quantum){
-      burst=quantum;
-    }else{
-      burst=burst_remain;
+    if (TYPE==ROBIN){
+      running.burst_remain = burst;
     }
   }
-  cpu_time += burst;
 
-  cout << "CPU burst------Running:  " << p.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  if (TYPE==ROBIN){
+    if (running.burst_remain>quantum){
+      burst=quantum;
+    } else {
+      burst=running.burst_remain;
+    }
+    running.burst_remain -= burst;
+  }
 
+  //cout << "CPU burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
   //set running process
   running.generate_time=timestamp;
   if (running.at_new < timestamp) {
+    cout << "CPU waiting time: " << running.cw << " += " << timestamp << " - " << running.at_new << endl;
     running.cw += (timestamp-running.at_new);
   }
+  cpu_time += burst;
   running.tc_remain -= burst;
   running.finish_time = timestamp + burst;
-
-  //set running flag
   RUNNING=1;
 }
 
@@ -194,14 +183,11 @@ void pick_up_running_process (){
 void check_ready_queue_and_running (){
   //current cpu burst of running process has been finished
   if (RUNNING==1 && running.finish_time == timestamp){
-    //stop running process and pick up a new running process
-    if (!ready_queue.empty()){
-      stop_process ();
+    stop_process ();
+
+    //pick up a new process
+    if (!ready_queue.empty() || (TYPE==ROBIN && running.burst_remain!=0)){
       pick_up_running_process();
-    }
-    //no process to run currently, just stop running process
-    else{
-      stop_process ();
     }
   }
   //there is no running process
@@ -242,43 +228,6 @@ int main(int argc, char** argv) {
       exit(0);
   }
 
-  cout << "TYPES:" << endl;
-  cout << "1. FCFS" << endl;
-  cout << "2. LCFS" << endl;
-  cout << "3. STJ"  << endl;
-  cout << "4. ROBIN"<< endl;
-  cout << "Please enter the number to choose a type :";
-
-  cin >> TYPE;
-  cout << endl;
-  if (TYPE==FCFS){
-    cout << "FCFS choosed." << endl;
-  }else if (TYPE==LCFS){
-    cout << "LCFS choosed." << endl;
-  }else if (TYPE==STJ){
-    cout << "STJ choosed." << endl;
-  }else if (TYPE==ROBIN){
-    cout << "ROBIN_ROUND choosed." << endl;
-  }else{
-    cout << "Invalid Choice, Exiting ..." << endl;
-  }
-
-  if (TYPE==ROBIN){
-    char choose;
-    cout << endl;
-    cout << "Do you want to set  your quantum ? DEFAULT:10 Y/N :" << endl;
-    cin >> choose;
-    if (choose == 'Y'){
-      cout << "Please enter the quantum:" << endl;
-      cin >> quantum;
-      cout << endl;
-    }else if (choose == 'N'){
-      cout << "Please enter the quantum:" << endl;
-      quantum=10;
-    }
-  }
-  cout << endl;
-
   //initiate running 
   running.finish_time=0;
   running.ft=0;
@@ -287,7 +236,7 @@ int main(int argc, char** argv) {
   running.cw=0;
   
   //read the input file
-  string file_name=argv[2];
+  string file_name=argv[1];
   ifstream infile;
   infile.open (file_name.c_str());
   if (!infile.is_open()){
@@ -316,6 +265,7 @@ int main(int argc, char** argv) {
       p.tt=0;
       p.it=0;
       p.cw=0; 
+      p.burst_remain=0;
 
       all_processes.push_back(p);
     }
