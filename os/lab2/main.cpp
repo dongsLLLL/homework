@@ -223,6 +223,20 @@ void check_block_queue (){
 //main function
 int main(int argc, char** argv) {
 
+  if (argc < 3){
+    cout << "Wrong Number of arguments, exiting ..." << endl;
+    exit(0);
+  }
+
+  //read input file
+  string file_name=argv[1];
+  ifstream infile;
+  infile.open (file_name.c_str());
+  if (!infile.is_open()){
+      cout << "Error Opening File, Please make sure correct input file name typed" << endl;
+      exit(0);
+  }
+
   string type = argv[2];
   if (type == "FCFS"){
     TYPE=FCFS;
@@ -246,7 +260,7 @@ int main(int argc, char** argv) {
 
   if (TYPE == ROBIN){
     if (argc != 4){
-      cout << "Wrong Number of arguments, exiting ..." << endl;
+      cout << "Wrong Number of arguments, quantum needed, exiting ..." << endl;
       exit(0);
     }
 
@@ -254,13 +268,6 @@ int main(int argc, char** argv) {
   }
 
   //read the input file
-  string file_name=argv[1];
-  ifstream infile;
-  infile.open (file_name.c_str());
-  if (!infile.is_open()){
-      cout << "Error Opening File, Please make sure correct input file name typed" << endl;
-      exit(0);
-  }
   int at,tc,cb,io;
   int process_id=0;
   string line;
