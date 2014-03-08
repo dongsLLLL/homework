@@ -241,9 +241,9 @@ int main(int argc, char** argv) {
   }else if (type == "LCFS"){
     TYPE=LCFS;
   }else if (type == "STJ"){
-    TYPE="STJ";
+    TYPE=STJ;
   }else if (type = "ROBIN"){
-    TYPE="ROBIN";
+    TYPE=ROBIN;
   }else{
     cout << "Error Type Name, Please make sure correct type name typed" << endl;
     exit(0); 
