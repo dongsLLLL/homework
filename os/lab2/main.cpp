@@ -223,7 +223,7 @@ void check_block_queue (){
 //main function
 int main(int argc, char** argv) {
 
-  if (argc != 2){
+  if (argc != 3){
       cout << "Wrong Number of arguments, exiting ..." << endl;
       exit(0);
   }
@@ -235,8 +235,22 @@ int main(int argc, char** argv) {
   running.it=0;
   running.cw=0;
   
+  string type = argv[3];
+  if (type == "FCFS"){
+    TYPE=FCFS;
+  }else if (type == "LCFS"){
+    TYPE=LCFS;
+  }else if (type == "STJ"){
+    TYPE="STJ";
+  }else if (type = "ROBIN"){
+    TYPE="ROBIN";
+  }else{
+    cout << "Error Type Name, Please make sure correct type name typed" << endl;
+    exit(0); 
+  }
+
   //read the input file
-  string file_name=argv[1];
+  string file_name=argv[2];
   ifstream infile;
   infile.open (file_name.c_str());
   if (!infile.is_open()){
