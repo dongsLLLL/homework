@@ -34,13 +34,13 @@ double io_time=0;
 int ofs=0;
 int RUNNING=0; 
 //solutions
-int FCFS=1;
-int LCFS=2;
-int STJ=3;
-int ROBIN=4;
+int FCFS=0;
+int LCFS=1;
+int STJ=2;
+int ROBIN=3;
 int TYPE=1;
 //quantum for robin round algotithm
-int quantum=-1;
+int quantum=2;
 
 struct process{
   int id;
@@ -170,7 +170,7 @@ void pick_up_running_process (){
   //set running process
   running.generate_time=timestamp;
   if (running.at_new < timestamp) {
-    cout << "CPU waiting time: " << running.cw << " += " << timestamp << " - " << running.at_new << endl;
+    //cout << "CPU waiting time: " << running.cw << " += " << timestamp << " - " << running.at_new << endl;
     running.cw += (timestamp-running.at_new);
   }
   cpu_time += burst;
@@ -223,18 +223,6 @@ void check_block_queue (){
 //main function
 int main(int argc, char** argv) {
 
-  if (argc != 3){
-      cout << "Wrong Number of arguments, exiting ..." << endl;
-      exit(0);
-  }
-
-  //initiate running 
-  running.finish_time=0;
-  running.ft=0;
-  running.tt=0;
-  running.it=0;
-  running.cw=0;
-  
   string type = argv[2];
   if (type == "FCFS"){
     TYPE=FCFS;
@@ -247,6 +235,22 @@ int main(int argc, char** argv) {
   }else{
     cout << "Error Type Name, Please make sure correct type name typed" << endl;
     exit(0); 
+  }
+
+  if (TYPE == FCFS || TYPE == LCFS || TYPE == STJ){
+    if (argc != 3){
+      cout << "Wrong Number of arguments, exiting ..." << endl;
+      exit(0);
+    }
+  }
+
+  if (TYPE == ROBIN){
+    if (argc != 4){
+      cout << "Wrong Number of arguments, exiting ..." << endl;
+      exit(0);
+    }
+
+    quantum = stoi(argv[3]);
   }
 
   //read the input file
@@ -285,6 +289,13 @@ int main(int argc, char** argv) {
     }
   }
 
+  //initiate running 
+  running.finish_time=0;
+  running.ft=0;
+  running.tt=0;
+  running.it=0;
+  running.cw=0;
+  
   //read the random value from random file
   ifstream rfile;
   rfile.open ("rfile");
@@ -298,7 +309,8 @@ int main(int argc, char** argv) {
     randvals.push_back(random);
   }
   
-  cout << "FCFS" << endl;
+  string title[4] = {"FCFS", "LCFS", "STJ", "ROBIN"};
+  cout << title[TYPE] << endl;
   int index = 0;
   while (true) {
     //begin reading the input file
