@@ -87,7 +87,7 @@ void finish_process(){
 //block running process for IO burst
 void block_process(){
   int burst = cpu_run_or_block_time(running.io);
-  //cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+//  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
   running.it += burst;
   running.finish_time = timestamp + burst;
   running.generate_time=timestamp;
@@ -166,7 +166,7 @@ void pick_up_running_process (){
     running.burst_remain -= burst;
   }
 
-  //cout << "CPU burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+//  cout << "CPU burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
   //set running process
   running.generate_time=timestamp;
   if (running.at_new < timestamp) {
@@ -208,11 +208,10 @@ void check_block_queue (){
       //IO burst finished
       if ((*it).finish_time == timestamp){
         temp=it;
-        block_queue.erase(temp);
-
         (*it).at_new=timestamp;
         (*it).generate_time=timestamp;
         ready_queue.push_back(*(it++));
+        block_queue.erase(temp);
       }else{
         it++;
       }
@@ -223,7 +222,7 @@ void check_block_queue (){
 //main function
 int main(int argc, char** argv) {
 
-  if (argc < 3){
+  if (argc != 3){
     cout << "Wrong Number of arguments, exiting ..." << endl;
     exit(0);
   }
@@ -244,27 +243,13 @@ int main(int argc, char** argv) {
     TYPE=LCFS;
   }else if (type == "STJ"){
     TYPE=STJ;
-  }else if (type == "ROBIN"){
+  }else if (type.substr(0,5) == "ROBIN" && type.length() > 5){
     TYPE=ROBIN;
+    string q_str=type.substr(5,type.length()-5);
+    quantum=atoi(q_str.c_str());
   }else{
     cout << "Error Type Name, Please make sure correct type name typed" << endl;
     exit(0); 
-  }
-
-  if (TYPE == FCFS || TYPE == LCFS || TYPE == STJ){
-    if (argc != 3){
-      cout << "Wrong Number of arguments, exiting ..." << endl;
-      exit(0);
-    }
-  }
-
-  if (TYPE == ROBIN){
-    if (argc != 4){
-      cout << "Wrong Number of arguments, quantum needed, exiting ..." << endl;
-      exit(0);
-    }
-
-    quantum = stoi(argv[3]);
   }
 
   //read the input file
@@ -316,8 +301,13 @@ int main(int argc, char** argv) {
     randvals.push_back(random);
   }
   
-  string title[4] = {"FCFS", "LCFS", "STJ", "ROBIN"};
-  cout << title[TYPE] << endl;
+  string title[4] = {"FCFS", "LCFS", "SJF", "RR"};
+  if (TYPE == ROBIN){
+    cout << title[TYPE] << " " <<quantum  << endl;
+  }else{
+    cout << title[TYPE] << endl;
+  }
+
   int index = 0;
   while (true) {
     //begin reading the input file
