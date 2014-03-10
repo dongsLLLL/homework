@@ -220,38 +220,41 @@ void check_block_queue (){
 }
 
 //main function
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
-  if (argc != 3){
-    cout << "Wrong Number of arguments, exiting ..." << endl;
-    exit(0);
+  char *sval=NULL;
+  int c;
+  
+  while((c=getopt(argc,argv,"vs:")) != -1){
+      switch (c){
+          case 's':  sval=optarg;
+              break;
+          case '?': {
+              if (optopt == 's')
+                  fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+              else if (isprint (optopt))
+                  fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+              else
+                  fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+              return 1;
+          default:
+              abort ();
+          }
+      }
   }
-
-  //read input file
-  string file_name=argv[1];
-  ifstream infile;
-  infile.open (file_name.c_str());
-  if (!infile.is_open()){
-      cout << "Error Opening File, Please make sure correct input file name typed" << endl;
-      exit(0);
+  
+  if (strncmp(sval,"F",1)==0) TYPE=FCFS;
+  else if (strncmp(sval,"L",1)==0) TYPE=LCFS;
+  else if (strncmp(sval,"S",1)==0) TYPE=STJ;
+  else if (strncmp(sval,"R",1)==0) {
+      TYPE=ROBIN;
+      string roundno=string(sval);
+      roundno.erase(roundno.begin());
+      quantum=atoi(roundno.c_str());
   }
-
-  string type = argv[2];
-  if (type == "FCFS"){
-    TYPE=FCFS;
-  }else if (type == "LCFS"){
-    TYPE=LCFS;
-  }else if (type == "STJ"){
-    TYPE=STJ;
-  }else if (type.substr(0,5) == "ROBIN" && type.length() > 5){
-    TYPE=ROBIN;
-    string q_str=type.substr(5,type.length()-5);
-    quantum=atoi(q_str.c_str());
-  }else{
-    cout << "Error Type Name, Please make sure correct type name typed" << endl;
-    exit(0); 
-  }
-
+  
+  ifstream infile(argv[optind]);
+  
   //read the input file
   int at,tc,cb,io;
   int process_id=0;
