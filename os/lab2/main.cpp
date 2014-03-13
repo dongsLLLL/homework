@@ -27,10 +27,11 @@
 
 using namespace std;
 
-int timestamp=0;
 int process_termination_no=0;
 double cpu_time=0;
 double io_time=0;
+double io_finish_time=0;
+int current_time=0;
 int ofs=0;
 int RUNNING=0; 
 //solutions
@@ -87,37 +88,54 @@ void finish_process(){
 //block running process for IO burst
 void block_process(){
   int burst = cpu_run_or_block_time(running.io);
-//  cout << "IO burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+   // cout << "IO burst------Running:  " << running.id  << "   Burst:  " << burst << endl;
+    if (io_finish_time>running.finish_time) {
+        if(io_finish_time<(running.finish_time+burst)){
+            io_time += burst-(io_finish_time-running.finish_time);
+            io_finish_time=running.finish_time+burst;
+        }
+    }
+    else {
+        io_time+=burst;
+        io_finish_time=running.finish_time+burst;
+    }
   running.it += burst;
-  running.finish_time = timestamp + burst;
-  running.generate_time=timestamp;
-  block_queue.push_back(running);
+  running.finish_time = running.finish_time + burst;
+  running.generate_time=running.finish_time;
+
+  //block_queue is a sorted queue
+  list<process>::iterator bq=block_queue.begin();
+  for (; bq != block_queue.end(); bq++){
+    if ((*bq).finish_time > running.finish_time){
+      block_queue.insert(bq,running);
+      break;
+    }
+  }
+  if (bq == block_queue.end()){
+    block_queue.push_back(running);
+  }
 }
 
 void robin_round_finished(){
-  running.at_new = timestamp;
-  running.generate_time = timestamp;
+  running.at_new = running.finish_time;
+  running.generate_time = running.finish_time;
   ready_queue.push_back(running);
 }
 
 //check running process if it has been finished or got blocked
 void stop_process (){
-  if (RUNNING==1) {
-    //current event finished
-    if (running.finish_time<=timestamp) {
-      if (running.tc_remain == 0) {
-        finish_process();
-      } else {
-        if (TYPE == ROBIN && running.burst_remain !=0 ){
-          robin_round_finished();
-        }else{
-          block_process();
-        }
-      }
-      //set RUNNING tag
-      RUNNING=0;
+  //current event finished
+  if (running.tc_remain == 0) {
+    finish_process();
+  } else {
+    if (TYPE == ROBIN && running.burst_remain !=0 ){
+      robin_round_finished();
+    }else{
+      block_process();
     }
   }
+  //set RUNNING tag
+  RUNNING=0;
 }
 
 void set_running_process(){
@@ -146,7 +164,6 @@ void set_running_process(){
 
 void pick_up_running_process (){
   set_running_process();
-
   int burst;
   if (running.burst_remain==0){
     burst = cpu_run_or_block_time(running.cb);
@@ -166,23 +183,24 @@ void pick_up_running_process (){
     running.burst_remain -= burst;
   }
 
-//  cout << "CPU burst------Running:  " << running.id << "   Timestamp:  " << timestamp << "   Burst:  " << burst << endl;
+  //cout << "CPU burst------Running:  " << running.id << "   Burst:  " << burst << endl;
   //set running process
-  running.generate_time=timestamp;
-  if (running.at_new < timestamp) {
-    //cout << "CPU waiting time: " << running.cw << " += " << timestamp << " - " << running.at_new << endl;
-    running.cw += (timestamp-running.at_new);
+  running.generate_time=current_time;
+  if (running.at_new < current_time) {
+    //cout << "CPU waiting time: " << running.cw << " += " << current_time << " - " << running.at_new << endl;
+    running.cw += (current_time-running.at_new);
   }
   cpu_time += burst;
   running.tc_remain -= burst;
-  running.finish_time = timestamp + burst;
+  running.finish_time = current_time + burst;
   RUNNING=1;
 }
 
 //solve block finished process and running process
 void check_ready_queue_and_running (){
   //current cpu burst of running process has been finished
-  if (RUNNING==1 && running.finish_time == timestamp){
+  if (RUNNING==1){
+    current_time=running.finish_time;
     stop_process ();
 
     //pick up a new process
@@ -194,6 +212,7 @@ void check_ready_queue_and_running (){
   else if (RUNNING==0){
     //pick up a new process
     if (!ready_queue.empty()){
+      current_time=ready_queue.front().finish_time;
       pick_up_running_process();
     }
   }
@@ -201,20 +220,21 @@ void check_ready_queue_and_running (){
 
 //check if there is any process in block list has done its io bound
 void check_block_queue (){
-  if (!block_queue.empty()) {
-    list<process>::iterator it = block_queue.begin();
-    list<process>::iterator temp;
-    while (it != block_queue.end()){
-      //IO burst finished
-      if ((*it).finish_time == timestamp){
-        temp=it;
-        (*it).at_new=timestamp;
-        (*it).generate_time=timestamp;
-        ready_queue.push_back(*(it++));
-        block_queue.erase(temp);
-      }else{
-        it++;
-      }
+
+  if (!block_queue.empty()){
+    if (RUNNING==1) {
+      current_time = running.finish_time;
+    }else if (!ready_queue.empty()){
+      current_time = ready_queue.front().finish_time;
+    }else{
+      current_time = block_queue.front().finish_time;
+    }
+
+    while (!block_queue.empty() && block_queue.front().finish_time <= current_time){
+      process p = block_queue.front();
+      p.at_new = p.finish_time;
+      ready_queue.push_back(p);
+      block_queue.pop_front();
     }
   }
 }
@@ -254,6 +274,7 @@ int main(int argc, char* argv[]) {
   }
   
   ifstream infile(argv[optind]);
+  ifstream rfile(argv[optind+1]);
   
   //read the input file
   int at,tc,cb,io;
@@ -273,7 +294,7 @@ int main(int argc, char* argv[]) {
       p.io=io;
       p.tc_remain = p.tc;
       p.at_new = p.at;
-      p.finish_time=0; 
+      p.finish_time=p.at; 
       p.ft=0; 
       p.tt=0;
       p.it=0;
@@ -286,19 +307,20 @@ int main(int argc, char* argv[]) {
 
   //initiate running 
   running.finish_time=0;
+  running.generate_time=0;
   running.ft=0;
   running.tt=0;
   running.it=0;
   running.cw=0;
   
   //read the random value from random file
-  ifstream rfile;
-  rfile.open ("rfile");
   if (!rfile.is_open()){
       cout << "Error Opening \"rfile\", Please make sure correct input file name typed" << endl;
       exit(0);
   }
   int random;
+    int r_count;
+    rfile >>r_count;
   while (!rfile.eof()){
     rfile >> random;
     randvals.push_back(random);
@@ -314,25 +336,44 @@ int main(int argc, char* argv[]) {
   int index = 0;
   while (true) {
     //begin reading the input file
+    if (RUNNING==0 && block_queue.empty()){
+      current_time = all_processes[index].at;
+    }
+    
+    if (RUNNING==0 && !block_queue.empty()){
+      current_time = block_queue.front().finish_time;
+    }
+
+    if (RUNNING == 1){
+      current_time = running.finish_time;
+    }
+
     while (index < all_processes.size()){
       process p = all_processes[index];
-      if (p.at == timestamp){
-        ready_queue.push_back(p);
+      if (p.at <= current_time){
+        //block_queue is a sorted queue
+        list<process>::iterator rq=ready_queue.begin();
+        for (; rq != ready_queue.end(); rq++){
+          if ((*rq).finish_time > current_time){
+            p.at_new = p.finish_time;
+            ready_queue.insert(rq,p);
+            break;
+          }
+        }
+        if (rq == ready_queue.end()){
+          ready_queue.push_back(p);
+        }
+
         index++; 
       }else{
         break;
       }
     }
 
+//    cout << block_queue.size() << "  " << ready_queue.size() << endl;
     //begin
     check_block_queue();
     check_ready_queue_and_running();
-
-    if (!block_queue.empty()) {
-      io_time++;
-    }
-
-    //cout << "TimeStamp: " << timestamp << endl;
 
     if (process_termination_no==all_processes.size()) {
 
@@ -349,11 +390,8 @@ int main(int argc, char* argv[]) {
 
       //print the summary
       printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",running.ft,(double)cpu_time/running.ft*100,(double)io_time/running.ft*100,
-                            (double)tt_sum/pcount,(double)cw_sum/pcount,(double)pcount*100/timestamp);
+                            (double)tt_sum/pcount,(double)cw_sum/pcount,(double)pcount*100/current_time);
       break;
     }
-
-    //timestamp increasement
-    timestamp++;
   }
 }
